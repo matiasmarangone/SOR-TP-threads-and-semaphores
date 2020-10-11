@@ -13,6 +13,8 @@ struct semaforos {
     sem_t sem_mezclar;
 	//poner demas semaforos aqui
     sem_t sem_salar;
+    sem_t sem_armar_medallones;
+
 };
 
 //creo los pasos con los ingredientes
@@ -64,7 +66,7 @@ void* cortar(void *data) {
 	//llamo a la funcion imprimir le paso el struct y la accion de la funcion
 	imprimirAccion(mydata,accion);
 	//uso sleep para simular que que pasa tiempo
-	usleep( 20000 );
+	usleep( 3000000 );
 	//doy la señal a la siguiente accion (cortar me habilita mezclar)
     sem_post(&mydata->semaforos_param.sem_mezclar);
 
@@ -73,6 +75,7 @@ void* cortar(void *data) {
 
 //funcion mezclar
 void* mezclar(void *data) {
+
         //creo el nombre de la accion de la funcion 
         char *accion = "mezclar";
         //creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
@@ -80,20 +83,42 @@ void* mezclar(void *data) {
         //llamo a la funcion imprimir le paso el struct y la accion de la funcion
         imprimirAccion(mydata,accion);
         //uso sleep para simular que que pasa tiempo
-        usleep( 20000 );
+        usleep( 3000000 );
         //doy la señal a la siguiente accion (cortar me habilita mezclar)
     sem_post(&mydata->semaforos_param.sem_salar);
 
     pthread_exit(NULL);
 }
 
+//funcion salar
+void* salar(void *data) {
+
+        //creo el nombre de la accion de la funcion 
+        char *accion = "salar";
+        //creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
+        struct parametro *mydata = data;
+        //llamo a la funcion imprimir le paso el struct y la accion de la funcion
+        imprimirAccion(mydata,accion);
+        //uso sleep para simular que que pasa tiempo
+        usleep( 3000000 );
+        //doy la señal a la siguiente accion (cortar me habilita mezclar)
+    sem_post(&mydata->semaforos_param.sem_armar_medallones);
+
+    pthread_exit(NULL);
+}
+
+
 
 void* ejecutarReceta(void *i) {
 
 	//variables semaforos
 	sem_t sem_mezclar;
-	//crear variables semaforos aqui
         sem_t sem_salar;
+	sem_t sem_armar_medallones;
+
+
+	//crear variables semaforos aqui
+
 	//variables hilos
 	pthread_t p1;
 	//crear variables hilos aqui
@@ -114,6 +139,7 @@ void* ejecutarReceta(void *i) {
 	//seteo semaforos
 	pthread_data->semaforos_param.sem_mezclar = sem_mezclar;
 	//setear demas semaforos al struct aqui
+	pthread_data->semaforos_param.sem_salar = sem_salar;
 
 
 	//seteo las acciones y los ingredientes (Faltan acciones e ingredientes) ¿Se ve hardcodeado no? ¿Les parece bien?
@@ -127,6 +153,12 @@ void* ejecutarReceta(void *i) {
         strcpy(pthread_data->pasos_param[1].ingredientes[1], "perejil");
  	strcpy(pthread_data->pasos_param[1].ingredientes[2], "cebolla");
 	strcpy(pthread_data->pasos_param[1].ingredientes[3], "carne picada");
+	
+	strcpy(pthread_data->pasos_param[2].accion, "salar");
+        strcpy(pthread_data->pasos_param[2].ingredientes[0], "ajo");
+        strcpy(pthread_data->pasos_param[2].ingredientes[1], "perejil");
+        strcpy(pthread_data->pasos_param[2].ingredientes[2], "cebolla");
+        strcpy(pthread_data->pasos_param[2].ingredientes[3], "carne picada");
 
 
 	//inicializo los semaforos
@@ -134,7 +166,7 @@ void* ejecutarReceta(void *i) {
 	sem_init(&(pthread_data->semaforos_param.sem_mezclar),0,0);
 	//inicializar demas semaforos aqui
 	sem_init(&(pthread_data->semaforos_param.sem_salar),0,0);
-
+	sem_init(&(pthread_data->semaforos_param.sem_armar_medallones),0,0);
 
 	//creo los hilos a todos les paso el struct creado (el mismo a todos los hilos) ya que todos comparten los semaforos 
     int rc;
@@ -165,6 +197,15 @@ void* ejecutarReceta(void *i) {
        exit(-1);
      }
 
+	int rc3;
+   	rc3 = pthread_create(&p1,NULL,salar,pthread_data);
+  	pthread_join (p1,NULL);
+
+  	if (rc3){
+       		printf("Error:unable to create thread, %d \n", rc);
+       		exit(-1);
+     	}
+
 
 	//destruccion de los semaforos
 	sem_destroy(&sem_mezclar);
@@ -177,6 +218,11 @@ void* ejecutarReceta(void *i) {
 
 int main ()
 {
+
+	//Creo que los mutex irian aca para ser globales
+	int pthread_mutex_init(pthread_mutex_t *restrict mutex, const pthread_mutexattr_t *restrict attr);
+
+
 	//creo los nombres de los equipos
 	int rc;
 	int *equipoNombre1 =malloc(sizeof(*equipoNombre1));
@@ -217,6 +263,8 @@ int main ()
 	pthread_join (equipo2,NULL);
 	pthread_join (equipo3,NULL);
 
+
+	int pthread_mutex_destroy(pthread_mutex_t *mutex);
 
     pthread_exit(NULL);
 }
