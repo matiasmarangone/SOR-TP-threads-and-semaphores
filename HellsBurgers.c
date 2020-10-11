@@ -1,4 +1,3 @@
-
 #include <stdio.h>      // libreria estandar
 #include <stdlib.h>     // para usar exit y funciones de la libreria standard
 #include <string.h>
@@ -13,6 +12,7 @@
 struct semaforos {
     sem_t sem_mezclar;
 	//poner demas semaforos aqui
+    sem_t sem_salar;
 };
 
 //creo los pasos con los ingredientes
@@ -67,37 +67,54 @@ void* cortar(void *data) {
 	usleep( 20000 );
 	//doy la señal a la siguiente accion (cortar me habilita mezclar)
     sem_post(&mydata->semaforos_param.sem_mezclar);
-	
+
     pthread_exit(NULL);
 }
 
+//funcion mezclar
+void* mezclar(void *data) {
+        //creo el nombre de la accion de la funcion 
+        char *accion = "mezclar";
+        //creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
+        struct parametro *mydata = data;
+        //llamo a la funcion imprimir le paso el struct y la accion de la funcion
+        imprimirAccion(mydata,accion);
+        //uso sleep para simular que que pasa tiempo
+        usleep( 20000 );
+        //doy la señal a la siguiente accion (cortar me habilita mezclar)
+    sem_post(&mydata->semaforos_param.sem_salar);
+
+    pthread_exit(NULL);
+}
+
+
 void* ejecutarReceta(void *i) {
-	
+
 	//variables semaforos
 	sem_t sem_mezclar;
 	//crear variables semaforos aqui
-	
+        sem_t sem_salar;
 	//variables hilos
-	pthread_t p1; 
+	pthread_t p1;
 	//crear variables hilos aqui
-	
+
 	//numero del equipo (casteo el puntero a un int)
 	int p = *((int *) i);
-	
+
 	printf("Ejecutando equipo %d \n", p);
 
 	//reservo memoria para el struct
 	struct parametro *pthread_data = malloc(sizeof(struct parametro));
 
 	//seteo los valores al struct
-	
+
 	//seteo numero de grupo
 	pthread_data->equipo_param = p;
 
 	//seteo semaforos
 	pthread_data->semaforos_param.sem_mezclar = sem_mezclar;
 	//setear demas semaforos al struct aqui
-	
+
 
 	//seteo las acciones y los ingredientes (Faltan acciones e ingredientes) ¿Se ve hardcodeado no? ¿Les parece bien?
      	strcpy(pthread_data->pasos_param[0].accion, "cortar");
@@ -110,12 +127,13 @@ void* ejecutarReceta(void *i) {
         strcpy(pthread_data->pasos_param[1].ingredientes[1], "perejil");
  	strcpy(pthread_data->pasos_param[1].ingredientes[2], "cebolla");
 	strcpy(pthread_data->pasos_param[1].ingredientes[3], "carne picada");
-	
-	
+
+
 	//inicializo los semaforos
 
 	sem_init(&(pthread_data->semaforos_param.sem_mezclar),0,0);
 	//inicializar demas semaforos aqui
+	sem_init(&(pthread_data->semaforos_param.sem_salar),0,0);
 
 
 	//creo los hilos a todos les paso el struct creado (el mismo a todos los hilos) ya que todos comparten los semaforos 
@@ -125,24 +143,33 @@ void* ejecutarReceta(void *i) {
                                 cortar,             //funcion a ejecutar
                                 pthread_data);                     //parametros de la funcion a ejecutar, pasado por referencia
 	//crear demas hilos aqui
-	
-	
+
+
 	//join de todos los hilos
 	pthread_join (p1,NULL);
 	//crear join de demas hilos
 
 
-	//valido que el hilo se alla creado bien 
+	//valido que el hilo se haya creado bien
     if (rc){
        printf("Error:unable to create thread, %d \n", rc);
        exit(-1);
      }
 
-	 
-	//destruccion de los semaforos 
+   int rc2;
+   rc2 = pthread_create(&p1,NULL,mezclar,pthread_data);
+   pthread_join (p1,NULL);
+
+   if (rc2){
+       printf("Error:unable to create thread, %d \n", rc);
+       exit(-1);
+     }
+
+
+	//destruccion de los semaforos
 	sem_destroy(&sem_mezclar);
-	//destruir demas semaforos 
-	
+	//destruir demas semaforos
+	sem_destroy(&sem_salar);
 	//salida del hilo
 	 pthread_exit(NULL);
 }
@@ -150,7 +177,7 @@ void* ejecutarReceta(void *i) {
 
 int main ()
 {
-	//creo los nombres de los equipos 
+	//creo los nombres de los equipos
 	int rc;
 	int *equipoNombre1 =malloc(sizeof(*equipoNombre1));
 	int *equipoNombre2 =malloc(sizeof(*equipoNombre2));
@@ -160,15 +187,15 @@ int main ()
 	*equipoNombre3 = 3;
 
 	//creo las variables los hilos de los equipos
-	pthread_t equipo1; 
+	pthread_t equipo1;
 	pthread_t equipo2;
 	pthread_t equipo3;
- 
+
 	//inicializo los hilos de los equipos
-    rc = pthread_create(&equipo1,                           //identificador unico
+    rc = pthread_create(&equipo1,                          //identificador unico
                             NULL,                          //atributos del thread
                                 ejecutarReceta,             //funcion a ejecutar
-                                equipoNombre1); 
+                                equipoNombre1);
 
     rc = pthread_create(&equipo2,                           //identificador unico
                             NULL,                          //atributos del thread
@@ -183,7 +210,7 @@ int main ()
    if (rc){
        printf("Error:unable to create thread, %d \n", rc);
        exit(-1);
-     } 
+     }
 
 	//join de todos los hilos
 	pthread_join (equipo1,NULL);
@@ -194,6 +221,3 @@ int main ()
     pthread_exit(NULL);
 }
 
-
-//Para compilar:   gcc HellsBurgers.c -o ejecutable -lpthread
-//Para ejecutar:   ./ejecutable
