@@ -10,10 +10,14 @@
 
 //creo estructura de semaforos 
 struct semaforos {
-    sem_t sem_mezclar;
+	sem_t sem_mezclar;
 	//poner demas semaforos aqui
-    sem_t sem_salar;
-    sem_t sem_armar_medallones;
+    	sem_t sem_salar;
+    	sem_t sem_armar_medallones;
+    	sem_t sem_plancha;
+	sem_t sem_cortar_extras;
+	sem_t sem_horno;
+	sem_t sem_armar_hamburguesa;
 
 };
 
@@ -107,6 +111,96 @@ void* salar(void *data) {
     pthread_exit(NULL);
 }
 
+//funcion armar medallones
+void* armar_medallones(void *data) {
+
+        //creo el nombre de la accion de la funcion 
+        char *accion = "armar_medallones";
+        //creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
+        struct parametro *mydata = data;
+        //llamo a la funcion imprimir le paso el struct y la accion de la funcion
+        imprimirAccion(mydata,accion);
+        //uso sleep para simular que que pasa tiempo
+        usleep( 3000000 );
+        //doy la señal a la siguiente accion (cortar me habilita mezclar)
+    sem_post(&mydata->semaforos_param.sem_plancha);
+
+    pthread_exit(NULL);
+}
+
+
+//funcion plancha
+void* plancha(void *data) {
+
+        //creo el nombre de la accion de la funcion 
+        char *accion = "plancha";
+        //creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
+        struct parametro *mydata = data;
+        //llamo a la funcion imprimir le paso el struct y la accion de la funcion
+        imprimirAccion(mydata,accion);
+        //uso sleep para simular que que pasa tiempo
+        usleep( 3000000 );
+        //doy la señal a la siguiente accion (cortar me habilita mezclar)
+        sem_post(&mydata->semaforos_param.sem_cortar_extras);
+
+    pthread_exit(NULL);
+}
+
+//funcion cortar extras
+void* cortar_extras(void *data) {
+
+        //creo el nombre de la accion de la funcion 
+        char *accion = "cortar_extras";
+        //creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
+        struct parametro *mydata = data;
+        //llamo a la funcion imprimir le paso el struct y la accion de la funcion
+        imprimirAccion(mydata,accion);
+        //uso sleep para simular que que pasa tiempo
+        usleep( 3000000 );
+        //doy la señal a la siguiente accion (cortar me habilita mezclar)
+        sem_post(&mydata->semaforos_param.sem_horno);
+
+    pthread_exit(NULL);
+}
+
+//funcion horno
+void* horno(void *data) {
+
+        //creo el nombre de la accion de la funcion 
+        char *accion = "horno";
+        //creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
+        struct parametro *mydata = data;
+        //llamo a la funcion imprimir le paso el struct y la accion de la funcion
+        imprimirAccion(mydata,accion);
+        //uso sleep para simular que que pasa tiempo
+        usleep( 3000000 );
+        //doy la señal a la siguiente accion (cortar me habilita mezclar)
+        sem_post(&mydata->semaforos_param.sem_armar_hamburguesa);
+
+    pthread_exit(NULL);
+}
+
+//funcion armar hamburguesa
+void* armar_hamburguesa(void *data) {
+
+        //creo el nombre de la accion de la funcion 
+        char *accion = "armar_hamburguesa";
+        //creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
+        struct parametro *mydata = data;
+        //llamo a la funcion imprimir le paso el struct y la accion de la funcion
+        imprimirAccion(mydata,accion);
+        //uso sleep para simular que que pasa tiempo
+        usleep( 3000000 );
+        //doy la señal a la siguiente accion (cortar me habilita mezclar)
+        //sem_post(&mydata->semaforos_param.sem_armar_hamburguesa);
+
+    pthread_exit(NULL);
+}
+
+
+
+
+
 
 
 void* ejecutarReceta(void *i) {
@@ -115,7 +209,10 @@ void* ejecutarReceta(void *i) {
 	sem_t sem_mezclar;
         sem_t sem_salar;
 	sem_t sem_armar_medallones;
-
+	sem_t sem_plancha;
+	sem_t sem_cortar_extras;
+	sem_t sem_horno;
+	sem_t sem_armar_hamburguesa;
 
 	//crear variables semaforos aqui
 
@@ -140,6 +237,15 @@ void* ejecutarReceta(void *i) {
 	pthread_data->semaforos_param.sem_mezclar = sem_mezclar;
 	//setear demas semaforos al struct aqui
 	pthread_data->semaforos_param.sem_salar = sem_salar;
+	pthread_data->semaforos_param.sem_armar_medallones = sem_armar_medallones;
+	pthread_data->semaforos_param.sem_plancha = sem_plancha;
+	pthread_data->semaforos_param.sem_cortar_extras = sem_cortar_extras;
+	pthread_data->semaforos_param.sem_horno = sem_horno;
+	pthread_data->semaforos_param.sem_armar_hamburguesa = sem_armar_hamburguesa;
+
+
+
+
 
 
 	//seteo las acciones y los ingredientes (Faltan acciones e ingredientes) ¿Se ve hardcodeado no? ¿Les parece bien?
@@ -160,6 +266,23 @@ void* ejecutarReceta(void *i) {
         strcpy(pthread_data->pasos_param[2].ingredientes[2], "cebolla");
         strcpy(pthread_data->pasos_param[2].ingredientes[3], "carne picada");
 
+	strcpy(pthread_data->pasos_param[3].accion, "armar_medallones");
+        strcpy(pthread_data->pasos_param[3].ingredientes[0], "mezcla para hamburguesas");
+        
+	strcpy(pthread_data->pasos_param[4].accion, "plancha");
+        strcpy(pthread_data->pasos_param[4].ingredientes[0], "medallones");
+      
+	strcpy(pthread_data->pasos_param[5].accion, "cortar_extras");
+        strcpy(pthread_data->pasos_param[5].ingredientes[0], "lechuga");
+	strcpy(pthread_data->pasos_param[5].ingredientes[0], "tomate");
+
+	strcpy(pthread_data->pasos_param[6].accion, "horno");
+        strcpy(pthread_data->pasos_param[6].ingredientes[0], "pan");
+        
+	strcpy(pthread_data->pasos_param[7].accion, "armar_hamburguesa");
+        strcpy(pthread_data->pasos_param[7].ingredientes[0], "medallones cocinados");
+	strcpy(pthread_data->pasos_param[7].ingredientes[0], "pan horneado");
+	strcpy(pthread_data->pasos_param[7].ingredientes[0], "extras, lechuga y tomate");
 
 	//inicializo los semaforos
 
@@ -167,14 +290,16 @@ void* ejecutarReceta(void *i) {
 	//inicializar demas semaforos aqui
 	sem_init(&(pthread_data->semaforos_param.sem_salar),0,0);
 	sem_init(&(pthread_data->semaforos_param.sem_armar_medallones),0,0);
+	sem_init(&(pthread_data->semaforos_param.sem_plancha),0,0);
+	sem_init(&(pthread_data->semaforos_param.sem_cortar_extras),0,0);
+        sem_init(&(pthread_data->semaforos_param.sem_horno),0,0);
+	sem_init(&(pthread_data->semaforos_param.sem_armar_hamburguesa),0,0);
+
 
 	//creo los hilos a todos les paso el struct creado (el mismo a todos los hilos) ya que todos comparten los semaforos 
-    int rc;
-    rc = pthread_create(&p1,                           //identificador unico
-                            NULL,                          //atributos del thread
-                                cortar,             //funcion a ejecutar
-                                pthread_data);                     //parametros de la funcion a ejecutar, pasado por referencia
-	//crear demas hilos aqui
+    	int rc;
+    	rc = pthread_create(&p1,NULL,cortar,pthread_data);
+
 
 
 	//join de todos los hilos
@@ -183,19 +308,19 @@ void* ejecutarReceta(void *i) {
 
 
 	//valido que el hilo se haya creado bien
-    if (rc){
-       printf("Error:unable to create thread, %d \n", rc);
-       exit(-1);
-     }
+    	if (rc){
+       		printf("Error:unable to create thread, %d \n", rc);
+       		exit(-1);
+     	}
 
-   int rc2;
-   rc2 = pthread_create(&p1,NULL,mezclar,pthread_data);
-   pthread_join (p1,NULL);
+   	int rc2;
+   	rc2 = pthread_create(&p1,NULL,mezclar,pthread_data);
+   	pthread_join (p1,NULL);
 
-   if (rc2){
-       printf("Error:unable to create thread, %d \n", rc);
-       exit(-1);
-     }
+   	if (rc2){
+       		printf("Error:unable to create thread, %d \n", rc);
+       		exit(-1);
+     	}
 
 	int rc3;
    	rc3 = pthread_create(&p1,NULL,salar,pthread_data);
@@ -206,11 +331,62 @@ void* ejecutarReceta(void *i) {
        		exit(-1);
      	}
 
+	int rc4;
+        rc4 = pthread_create(&p1,NULL,armar_medallones,pthread_data);
+        pthread_join (p1,NULL);
+
+        if (rc4){
+                printf("Error:unable to create thread, %d \n", rc);
+                exit(-1);
+        }
+
+	int rc5;
+        rc5 = pthread_create(&p1,NULL,plancha,pthread_data);
+        pthread_join (p1,NULL);
+
+        if (rc5){
+                printf("Error:unable to create thread, %d \n", rc);
+                exit(-1);
+        }
+
+	int rc6;
+        rc6 = pthread_create(&p1,NULL,cortar_extras,pthread_data);
+        pthread_join (p1,NULL);
+
+        if (rc6){
+                printf("Error:unable to create thread, %d \n", rc);
+                exit(-1);
+        }
+
+	int rc7;
+        rc7 = pthread_create(&p1,NULL,horno,pthread_data);
+        pthread_join (p1,NULL);
+
+        if (rc7){
+                printf("Error:unable to create thread, %d \n", rc);
+                exit(-1);
+        }
+
+	int rc8;
+        rc8 = pthread_create(&p1,NULL,armar_hamburguesa,pthread_data);
+        pthread_join (p1,NULL);
+
+        if (rc8){
+                printf("Error:unable to create thread, %d \n", rc);
+                exit(-1);
+        }
+
 
 	//destruccion de los semaforos
 	sem_destroy(&sem_mezclar);
 	//destruir demas semaforos
 	sem_destroy(&sem_salar);
+	sem_destroy(&sem_armar_medallones);
+	sem_destroy(&sem_plancha);
+	sem_destroy(&sem_cortar_extras);
+	sem_destroy(&sem_horno);
+	sem_destroy(&sem_armar_hamburguesa);
+
 	//salida del hilo
 	 pthread_exit(NULL);
 }
