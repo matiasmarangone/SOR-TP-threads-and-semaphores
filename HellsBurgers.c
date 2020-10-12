@@ -4,9 +4,11 @@
 #include <pthread.h>    // para usar threads
 #include <semaphore.h>  // para usar semaforos
 #include <unistd.h>
+#include <stdint.h>
 
 
 #define LIMITE 50
+#define MAXCHAR 1000
 
 //creo estructura de semaforos 
 struct semaforos {
@@ -267,7 +269,55 @@ void* ejecutarReceta(void *i) {
 	pthread_data->semaforos_param.sem_armar_hamburguesa = sem_armar_hamburguesa;
 
 	//seteo las acciones y los ingredientes (Faltan acciones e ingredientes) ¿Se ve hardcodeado no? ¿Les parece bien?
- 	strcpy(pthread_data->pasos_param[0].accion, "cortar");
+ 	
+	
+
+	FILE *fp;
+	char* filename = "receta.txt";
+
+	char * line = NULL;
+	size_t len = 0;
+	ssize_t read;
+
+	fp = fopen(filename, "r");
+	if (fp == NULL)
+    	exit(EXIT_FAILURE);
+
+	int contadorLineas=0;
+
+	while ((read = getline(&line, &len, fp)) != -1) {
+
+	int init_size = strlen(line);
+	int contador = 0;
+	char *ptr = strtok(line,"|");
+
+	while (ptr != NULL)
+	{
+
+		if(contador ==0){
+			//printf("Numero de linea %d", contadorLineas);
+			//printf("Esta es la accion '%s'\n", ptr);
+			strcpy(pthread_data->pasos_param[contadorLineas].accion, ptr);
+			ptr = strtok(NULL, "|");
+		}else{
+			//printf("Numero de linea %d", contadorLineas);
+			//printf("Este es el ingrediente '%s'\n", ptr);
+			strcpy(pthread_data->pasos_param[contadorLineas].ingredientes[contador], ptr);
+			ptr = strtok(NULL, "|");
+		}
+
+		contador++;
+	}
+		
+		contadorLineas++;
+
+    }
+
+    fclose(fp);
+
+	
+	 
+	/*strcpy(pthread_data->pasos_param[0].accion, "cortar");
 	strcpy(pthread_data->pasos_param[0].ingredientes[0], "ajo");
     strcpy(pthread_data->pasos_param[0].ingredientes[1], "perejil");
  	strcpy(pthread_data->pasos_param[0].ingredientes[2], "cebolla");
@@ -301,6 +351,10 @@ void* ejecutarReceta(void *i) {
     strcpy(pthread_data->pasos_param[7].ingredientes[0], "medallones cocinados");
 	strcpy(pthread_data->pasos_param[7].ingredientes[0], "pan horneado");
 	strcpy(pthread_data->pasos_param[7].ingredientes[0], "extras, lechuga y tomate");
+	*/
+
+
+
 
 	//inicializo los semaforos
 
