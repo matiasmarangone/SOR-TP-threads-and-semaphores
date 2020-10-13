@@ -10,6 +10,12 @@
 #define LIMITE 50
 #define MAXCHAR 1000
 
+
+static pthread_mutex_t mutex_salar = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mutex_plancha = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mutex_horno = PTHREAD_MUTEX_INITIALIZER;
+
+
 //creo estructura de semaforos 
 struct semaforos {
 	sem_t sem_mezclar;
@@ -115,7 +121,7 @@ void* mezclar(void *data) {
 
 //funcion salar
 void* salar(void *data) {
-
+		pthread_mutex_lock(&mutex_salar);
         //creo el nombre de la accion de la funcion 
         char *accion = "salar";
         //creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
@@ -128,9 +134,10 @@ void* salar(void *data) {
         //uso sleep para simular que que pasa tiempo
         usleep( 3000000 );
         //doy la señal a la siguiente accion (cortar me habilita mezclar)
-    sem_post(&mydata->semaforos_param.sem_armar_medallones);
-
-    pthread_exit(NULL);
+    	sem_post(&mydata->semaforos_param.sem_armar_medallones);
+		pthread_mutex_unlock(&mutex_salar);
+		
+    	pthread_exit(NULL);
 }
 
 //funcion armar medallones
@@ -153,10 +160,9 @@ void* armar_medallones(void *data) {
     pthread_exit(NULL);
 }
 
-
 //funcion plancha
 void* plancha(void *data) {
-
+		pthread_mutex_lock(&mutex_plancha);
         //creo el nombre de la accion de la funcion 
         char *accion = "plancha";
         //creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
@@ -169,9 +175,10 @@ void* plancha(void *data) {
         //uso sleep para simular que que pasa tiempo
         usleep( 3000000 );
         //doy la señal a la siguiente accion (cortar me habilita mezclar)
-        sem_post(&mydata->semaforos_param.sem_cortar_extras);
-
-    pthread_exit(NULL);
+        sem_post(&mydata->semaforos_param.sem_plancha);
+		pthread_mutex_unlock(&mutex_plancha);
+		
+   		pthread_exit(NULL);
 }
 
 //funcion cortar extras
@@ -182,36 +189,37 @@ void* cortar_extras(void *data) {
         //creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
         struct parametro *mydata = data;
 
-		sem_wait(&mydata->semaforos_param.sem_cortar_extras);
+		//sem_wait(&mydata->semaforos_param.sem_cortar_extras);
 
         //llamo a la funcion imprimir le paso el struct y la accion de la funcion
         imprimirAccion(mydata,accion);
         //uso sleep para simular que que pasa tiempo
         usleep( 3000000 );
         //doy la señal a la siguiente accion (cortar me habilita mezclar)
-        sem_post(&mydata->semaforos_param.sem_horno);
+        sem_wait(&mydata->semaforos_param.sem_cortar_extras);
 
     pthread_exit(NULL);
 }
 
 //funcion horno
 void* horno(void *data) {
-
+		pthread_mutex_lock(&mutex_horno);
         //creo el nombre de la accion de la funcion 
         char *accion = "horno";
         //creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
         struct parametro *mydata = data;
 
-		sem_wait(&mydata->semaforos_param.sem_horno);
+		//sem_wait(&mydata->semaforos_param.sem_horno);
 
         //llamo a la funcion imprimir le paso el struct y la accion de la funcion
         imprimirAccion(mydata,accion);
         //uso sleep para simular que que pasa tiempo
         usleep( 3000000 );
         //doy la señal a la siguiente accion (cortar me habilita mezclar)
-        sem_post(&mydata->semaforos_param.sem_armar_hamburguesa);
-
-    pthread_exit(NULL);
+        sem_wait(&mydata->semaforos_param.sem_horno);
+		pthread_mutex_unlock(&mutex_horno);
+		
+    	pthread_exit(NULL);
 }
 
 //funcion armar hamburguesa
@@ -222,7 +230,9 @@ void* armar_hamburguesa(void *data) {
         //creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
         struct parametro *mydata = data;
 
-		sem_wait(&mydata->semaforos_param.sem_armar_hamburguesa);
+		sem_wait(&mydata->semaforos_param.sem_horno);
+		sem_wait(&mydata->semaforos_param.sem_cortar_extras);
+		sem_wait(&mydata->semaforos_param.sem_plancha);
 
         //llamo a la funcion imprimir le paso el struct y la accion de la funcion
         imprimirAccion(mydata,accion);
@@ -249,7 +259,6 @@ void* ejecutarReceta(void *i) {
 
 	//variables hilos
 	pthread_t p1;
-	//crear variables hilos aqui
 	pthread_t p2;
 	pthread_t p3;
 	pthread_t p4;
@@ -274,7 +283,6 @@ void* ejecutarReceta(void *i) {
 
 	//seteo semaforos
 	pthread_data->semaforos_param.sem_mezclar = sem_mezclar;
-	//setear demas semaforos al struct aqui
 	pthread_data->semaforos_param.sem_salar = sem_salar;
 	pthread_data->semaforos_param.sem_armar_medallones = sem_armar_medallones;
 	pthread_data->semaforos_param.sem_plancha = sem_plancha;
@@ -282,9 +290,7 @@ void* ejecutarReceta(void *i) {
 	pthread_data->semaforos_param.sem_horno = sem_horno;
 	pthread_data->semaforos_param.sem_armar_hamburguesa = sem_armar_hamburguesa;
 
-	//seteo las acciones y los ingredientes (Faltan acciones e ingredientes) ¿Se ve hardcodeado no? ¿Les parece bien?
- 	
-	
+	//seteo las acciones y los ingredientes 	
 
 	FILE *fp;
 	char* filename = "receta.txt";
@@ -329,56 +335,15 @@ void* ejecutarReceta(void *i) {
 
     fclose(fp);
 
-	
-	 
-	/*strcpy(pthread_data->pasos_param[0].accion, "cortar");
-	strcpy(pthread_data->pasos_param[0].ingredientes[0], "ajo");
-    strcpy(pthread_data->pasos_param[0].ingredientes[1], "perejil");
- 	strcpy(pthread_data->pasos_param[0].ingredientes[2], "cebolla");
-
-	strcpy(pthread_data->pasos_param[1].accion, "mezclar");
-	strcpy(pthread_data->pasos_param[1].ingredientes[0], "ajo");
-    strcpy(pthread_data->pasos_param[1].ingredientes[1], "perejil");
- 	strcpy(pthread_data->pasos_param[1].ingredientes[2], "cebolla");
-	strcpy(pthread_data->pasos_param[1].ingredientes[3], "carne picada");
-	
-	strcpy(pthread_data->pasos_param[2].accion, "salar");
-    strcpy(pthread_data->pasos_param[2].ingredientes[0], "ajo");
-	strcpy(pthread_data->pasos_param[2].ingredientes[1], "perejil");
-    strcpy(pthread_data->pasos_param[2].ingredientes[2], "cebolla");
-    strcpy(pthread_data->pasos_param[2].ingredientes[3], "carne picada");
-
-	strcpy(pthread_data->pasos_param[3].accion, "armar_medallones");
-    strcpy(pthread_data->pasos_param[3].ingredientes[0], "mezcla para hamburguesas");
-        
-	strcpy(pthread_data->pasos_param[4].accion, "plancha");
-    strcpy(pthread_data->pasos_param[4].ingredientes[0], "medallones");
-      
-	strcpy(pthread_data->pasos_param[5].accion, "cortar_extras");
-    strcpy(pthread_data->pasos_param[5].ingredientes[0], "lechuga");
-	strcpy(pthread_data->pasos_param[5].ingredientes[0], "tomate");
-
-	strcpy(pthread_data->pasos_param[6].accion, "horno");
-    strcpy(pthread_data->pasos_param[6].ingredientes[0], "pan");
-        
-	strcpy(pthread_data->pasos_param[7].accion, "armar_hamburguesa");
-    strcpy(pthread_data->pasos_param[7].ingredientes[0], "medallones cocinados");
-	strcpy(pthread_data->pasos_param[7].ingredientes[0], "pan horneado");
-	strcpy(pthread_data->pasos_param[7].ingredientes[0], "extras, lechuga y tomate");
-	*/
-
-
-
 
 	//inicializo los semaforos
 
 	sem_init(&(pthread_data->semaforos_param.sem_mezclar),0,0);
-	//inicializar demas semaforos aqui
 	sem_init(&(pthread_data->semaforos_param.sem_salar),0,0);
 	sem_init(&(pthread_data->semaforos_param.sem_armar_medallones),0,0);
 	sem_init(&(pthread_data->semaforos_param.sem_plancha),0,0);
-	sem_init(&(pthread_data->semaforos_param.sem_cortar_extras),0,0);
-    sem_init(&(pthread_data->semaforos_param.sem_horno),0,0);
+	sem_init(&(pthread_data->semaforos_param.sem_cortar_extras),0,1);
+    sem_init(&(pthread_data->semaforos_param.sem_horno),0,1);
 	sem_init(&(pthread_data->semaforos_param.sem_armar_hamburguesa),0,0);
 
 
@@ -474,13 +439,7 @@ void* ejecutarReceta(void *i) {
 	 pthread_exit(NULL);
 }
 
-
-int main ()
-{
-
-	//Creo que los mutex irian aca para ser globales
-	int pthread_mutex_init(pthread_mutex_t *restrict mutex, const pthread_mutexattr_t *restrict attr);
-
+int main (){
 
 	//creo los nombres de los equipos
 	int rc;
@@ -522,9 +481,9 @@ int main ()
 	pthread_join (equipo2,NULL);
 	pthread_join (equipo3,NULL);
 
-
-	int pthread_mutex_destroy(pthread_mutex_t *mutex);
+	pthread_mutex_destroy(&mutex_salar);
+	pthread_mutex_destroy(&mutex_plancha);
+	pthread_mutex_destroy(&mutex_horno);
 
     pthread_exit(NULL);
 }
-
