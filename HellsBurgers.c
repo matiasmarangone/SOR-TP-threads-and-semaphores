@@ -39,6 +39,10 @@ struct parametro {
 
 //funcion para imprimir las acciones y los ingredientes de la accion
 void* imprimirAccion(void *data, char *accionIn) {
+
+	FILE *fp1;
+	fp1 = fopen("resultado.txt", "a");
+
 	struct parametro *mydata = data;
 	//calculo la longitud del array de pasos 
 	int sizeArray = (int)( sizeof(mydata->pasos_param) / sizeof(mydata->pasos_param[0]));
@@ -47,20 +51,30 @@ void* imprimirAccion(void *data, char *accionIn) {
 	for(i = 0; i < sizeArray; i ++){
 		//pregunto si la accion del array es igual a la pasada por parametro (si es igual la funcion strcmp devuelve cero)
 		if(strcmp(mydata->pasos_param[i].accion, accionIn) == 0){
+		
+		fprintf(fp1,"\tEquipo %d - accion %s \n " , mydata->equipo_param, mydata->pasos_param[i].accion);
 		printf("\tEquipo %d - accion %s \n " , mydata->equipo_param, mydata->pasos_param[i].accion);
+		
 		//calculo la longitud del array de ingredientes
 		int sizeArrayIngredientes = (int)( sizeof(mydata->pasos_param[i].ingredientes) / sizeof(mydata->pasos_param[i].ingredientes[0]) );
 		//indice para recorrer array de ingredientes
 		int h;
+		
+		fprintf(fp1,"\tEquipo %d -----------ingredientes : ----------\n",mydata->equipo_param); 
 		printf("\tEquipo %d -----------ingredientes : ----------\n",mydata->equipo_param); 
 			for(h = 0; h < sizeArrayIngredientes; h++) {
 				//consulto si la posicion tiene valor porque no se cuantos ingredientes tengo por accion 
 				if(strlen(mydata->pasos_param[i].ingredientes[h]) != 0) {
+							
+							fprintf(fp1,"\tEquipo %d ingrediente  %d : %s \n",mydata->equipo_param,h,mydata->pasos_param[i].ingredientes[h]);
 							printf("\tEquipo %d ingrediente  %d : %s \n",mydata->equipo_param,h,mydata->pasos_param[i].ingredientes[h]);
 				}
 			}
 		}
 	}
+
+	fclose(fp1);
+
 }
 
 //funcion para tomar de ejemplo
