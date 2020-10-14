@@ -26,6 +26,8 @@ A continuación se muestra la prueba de escritorio final con la que me base para
 
 ![semaforo1](/images/semaphorestp.png)
 
+Como referencia, las funciones en color naranja son las compartidas por todos los equipos y por eso son las que tienen los mutex, ya que protegeremos a la seccion critica y nos aseguramos que solo un equipo a la vez pueda usar ese recurso (ejecutar esa funcion)
+
 Y el estado de los semaforos para la prueba de escritorio:
 ![semaforo2](/images/semaphorestp2.png)
 Nota: El pipe utilizado es para reflejar el cambio de estado gracias a un wait o un post. No significa que tenga 2 valores a la vez, sino que en ese momento fue cuando el semaforo cambió su valor.
