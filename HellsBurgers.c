@@ -21,14 +21,15 @@ static pthread_mutex_t mutex_horno = PTHREAD_MUTEX_INITIALIZER;
 
 //creo estructura de semaforos 
 struct semaforos {
+
+	sem_t sem_cortar;
 	sem_t sem_mezclar;
-	//poner demas semaforos aqui
     sem_t sem_salar;
     sem_t sem_armar_medallones;
     sem_t sem_plancha;
 	sem_t sem_cortar_extras;
 	sem_t sem_horno;
-	sem_t sem_armar_hamburguesa;
+	sem_t sem_plancha_aux;
 
 };
 
@@ -92,6 +93,9 @@ void* cortar(void *data) {
 	char *accion = "cortar";
 	//creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
 	struct parametro *mydata = data;
+
+	sem_wait(&mydata->semaforos_param.sem_cortar);
+
 	//llamo a la funcion imprimir le paso el struct y la accion de la funcion
 	imprimirAccion(mydata,accion);
 	//uso sleep para simular que que pasa tiempo
@@ -171,8 +175,9 @@ void* plancha(void *data) {
         //creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
         struct parametro *mydata = data;
 
-		sem_wait(&mydata->semaforos_param.sem_plancha);
+		
         pthread_mutex_lock(&mutex_plancha);
+		sem_wait(&mydata->semaforos_param.sem_plancha);
 
         //llamo a la funcion imprimir le paso el struct y la accion de la funcion
         imprimirAccion(mydata,accion);
@@ -180,9 +185,10 @@ void* plancha(void *data) {
         usleep( 1000000 );
         //doy la señal a la siguiente accion (cortar me habilita mezclar)
         
-		pthread_mutex_unlock(&mutex_plancha);
-        sem_post(&mydata->semaforos_param.sem_plancha);
 		
+        sem_post(&mydata->semaforos_param.sem_plancha_aux);
+		pthread_mutex_unlock(&mutex_plancha);
+
    		pthread_exit(NULL);
 }
 
@@ -198,6 +204,8 @@ void* cortar_extras(void *data) {
         imprimirAccion(mydata,accion);
         //uso sleep para simular que que pasa tiempo
         usleep( 1000000 );
+
+		sem_post(&mydata->semaforos_param.sem_cortar_extras);
 
     pthread_exit(NULL);
 }
@@ -217,6 +225,8 @@ void* horno(void *data) {
         //uso sleep para simular que que pasa tiempo
         usleep( 1000000 );
 
+		sem_post(&mydata->semaforos_param.sem_horno);
+
 		pthread_mutex_unlock(&mutex_horno);
     	pthread_exit(NULL);
 }
@@ -232,7 +242,7 @@ void* armar_hamburguesa(void *data) {
 
 		sem_wait(&mydata->semaforos_param.sem_horno);
 		sem_wait(&mydata->semaforos_param.sem_cortar_extras);
-		sem_wait(&mydata->semaforos_param.sem_plancha);
+		sem_wait(&mydata->semaforos_param.sem_plancha_aux);
 
         //llamo a la funcion imprimir le paso el struct y la accion de la funcion
         imprimirAccion(mydata,accion);
@@ -241,8 +251,8 @@ void* armar_hamburguesa(void *data) {
         usleep( 1000000 );
 
         sem_post(&mydata->semaforos_param.sem_horno);
-		sem_post(&mydata->semaforos_param.sem_cortar_extras);
-		sem_post(&mydata->semaforos_param.sem_plancha);
+		//sem_post(&mydata->semaforos_param.sem_cortar_extras);
+		//sem_post(&mydata->semaforos_param.sem_plancha);
 
          if(GANADOR==0){
             //printf("\tEquipo %d \n " , mydata->equipo_param);
@@ -255,13 +265,14 @@ void* armar_hamburguesa(void *data) {
 void* ejecutarReceta(void *i) {
 
 	//variables semaforos
+	sem_t sem_cortar;
 	sem_t sem_mezclar;
     sem_t sem_salar;
 	sem_t sem_armar_medallones;
 	sem_t sem_plancha;
 	sem_t sem_cortar_extras;
 	sem_t sem_horno;
-	sem_t sem_armar_hamburguesa;
+	sem_t sem_plancha_aux;
 
 	//crear variables semaforos aqui
 
@@ -290,13 +301,14 @@ void* ejecutarReceta(void *i) {
 	pthread_data->equipo_param = p;
 
 	//seteo semaforos
+	pthread_data->semaforos_param.sem_cortar = sem_cortar;
 	pthread_data->semaforos_param.sem_mezclar = sem_mezclar;
 	pthread_data->semaforos_param.sem_salar = sem_salar;
 	pthread_data->semaforos_param.sem_armar_medallones = sem_armar_medallones;
 	pthread_data->semaforos_param.sem_plancha = sem_plancha;
 	pthread_data->semaforos_param.sem_cortar_extras = sem_cortar_extras;
 	pthread_data->semaforos_param.sem_horno = sem_horno;
-	pthread_data->semaforos_param.sem_armar_hamburguesa = sem_armar_hamburguesa;
+	pthread_data->semaforos_param.sem_plancha_aux = sem_plancha_aux;
 
 	//---------------seteo las acciones y los ingredientes 	------------------------------------
 
@@ -345,14 +357,14 @@ void* ejecutarReceta(void *i) {
 
 
 	//--------------------------inicializo los semaforos-------------------------------------
-
+	sem_init(&(pthread_data->semaforos_param.sem_cortar),0,1);
 	sem_init(&(pthread_data->semaforos_param.sem_mezclar),0,0);
 	sem_init(&(pthread_data->semaforos_param.sem_salar),0,0);
 	sem_init(&(pthread_data->semaforos_param.sem_armar_medallones),0,0);
 	sem_init(&(pthread_data->semaforos_param.sem_plancha),0,0);
-	sem_init(&(pthread_data->semaforos_param.sem_cortar_extras),0,1);
-    sem_init(&(pthread_data->semaforos_param.sem_horno),0,1);
-	sem_init(&(pthread_data->semaforos_param.sem_armar_hamburguesa),0,0);
+	sem_init(&(pthread_data->semaforos_param.sem_cortar_extras),0,0);
+    sem_init(&(pthread_data->semaforos_param.sem_horno),0,0);
+	sem_init(&(pthread_data->semaforos_param.sem_plancha_aux),0,0);
 
 
 	//creo los hilos a todos les paso el struct creado (el mismo a todos los hilos) ya que todos comparten los semaforos 
@@ -433,14 +445,14 @@ void* ejecutarReceta(void *i) {
 
 
 	//destruccion de los semaforos
+	sem_destroy(&sem_cortar);
 	sem_destroy(&sem_mezclar);
-	//destruir demas semaforos
 	sem_destroy(&sem_salar);
 	sem_destroy(&sem_armar_medallones);
 	sem_destroy(&sem_plancha);
 	sem_destroy(&sem_cortar_extras);
 	sem_destroy(&sem_horno);
-	sem_destroy(&sem_armar_hamburguesa);
+	sem_destroy(&sem_plancha_aux);
 
 	//salida del hilo
 	 pthread_exit(NULL);
