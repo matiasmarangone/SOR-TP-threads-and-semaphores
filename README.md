@@ -28,6 +28,7 @@ A continuación se muestra la prueba de escritorio final con la que me base para
 
 Y el estado de los semaforos para la prueba de escritorio:
 ![semaforo2](/images/semaphorestp2.png)
+Nota: El pipe utilizado es para reflejar el cambio de estado gracias a un wait o un post. No significa que tenga 2 valores a la vez, sino que en ese momento fue cuando el semaforo cambió su valor.
 
 <a name="implementacion"/>
 
@@ -71,6 +72,6 @@ La gran diferencia que pude apreciar es que los mutex "tienen dueño" en cambio 
 <a name="bibliografia"/>
 
 ### Bibliografía
-The Little Book of Semaphores. Libro de Allen B. Downey
-Slides de las clases
-Los 3 videos de ejercicios de semaforos en los que vimos pruebas de escritorio
+* The Little Book of Semaphores. Libro de Allen B. Downey
+* Slides de las clases
+* Los 3 videos de ejercicios de semaforos en los que vimos pruebas de escritorio
