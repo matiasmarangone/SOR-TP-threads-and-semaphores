@@ -1,6 +1,7 @@
 # :traffic_light: Trabajo Práctico de hilos y semáforos :traffic_light:	
 
 _Este repositorio es utilizado para entregar un trabajo práctico de Sistemas Operativos y Redes._
+Alumno: Matias Marangone
 
 ## Tabla de contenidos
 * [Información](#info)  
