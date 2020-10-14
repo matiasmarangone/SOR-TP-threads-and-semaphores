@@ -9,6 +9,9 @@
 
 #define LIMITE 50
 #define MAXCHAR 1000
+int GANADOR = 0;
+int ganador_auxiliar = 1;
+char * equipo_ganador;
 
 
 static pthread_mutex_t mutex_salar = PTHREAD_MUTEX_INITIALIZER;
@@ -92,7 +95,7 @@ void* cortar(void *data) {
 	//llamo a la funcion imprimir le paso el struct y la accion de la funcion
 	imprimirAccion(mydata,accion);
 	//uso sleep para simular que que pasa tiempo
-	usleep( 3000000 );
+	usleep( 1000000 );
 	//doy la señal a la siguiente accion (cortar me habilita mezclar)
     sem_post(&mydata->semaforos_param.sem_mezclar);
 
@@ -112,7 +115,7 @@ void* mezclar(void *data) {
         //llamo a la funcion imprimir le paso el struct y la accion de la funcion
         imprimirAccion(mydata,accion);
         //uso sleep para simular que que pasa tiempo
-        usleep( 3000000 );
+        usleep( 1000000 );
         //doy la señal a la siguiente accion (cortar me habilita mezclar)
     	sem_post(&mydata->semaforos_param.sem_salar);
 
@@ -132,7 +135,7 @@ void* salar(void *data) {
         //llamo a la funcion imprimir le paso el struct y la accion de la funcion
         imprimirAccion(mydata,accion);
         //uso sleep para simular que que pasa tiempo
-        usleep( 3000000 );
+        usleep( 1000000 );
         //doy la señal a la siguiente accion (cortar me habilita mezclar)
     	sem_post(&mydata->semaforos_param.sem_armar_medallones);
 		pthread_mutex_unlock(&mutex_salar);
@@ -153,7 +156,7 @@ void* armar_medallones(void *data) {
         //llamo a la funcion imprimir le paso el struct y la accion de la funcion
         imprimirAccion(mydata,accion);
         //uso sleep para simular que que pasa tiempo
-        usleep( 3000000 );
+        usleep( 1000000 );
         //doy la señal a la siguiente accion (cortar me habilita mezclar)
     	sem_post(&mydata->semaforos_param.sem_plancha);
 
@@ -174,7 +177,7 @@ void* plancha(void *data) {
         //llamo a la funcion imprimir le paso el struct y la accion de la funcion
         imprimirAccion(mydata,accion);
         //uso sleep para simular que que pasa tiempo
-        usleep( 3000000 );
+        usleep( 1000000 );
         //doy la señal a la siguiente accion (cortar me habilita mezclar)
         
 		pthread_mutex_unlock(&mutex_plancha);
@@ -191,14 +194,10 @@ void* cortar_extras(void *data) {
         //creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
         struct parametro *mydata = data;
 
-		//sem_wait(&mydata->semaforos_param.sem_cortar_extras);
-
         //llamo a la funcion imprimir le paso el struct y la accion de la funcion
         imprimirAccion(mydata,accion);
         //uso sleep para simular que que pasa tiempo
-        usleep( 3000000 );
-        //doy la señal a la siguiente accion (cortar me habilita mezclar)
-        //sem_wait(&mydata->semaforos_param.sem_cortar_extras);
+        usleep( 1000000 );
 
     pthread_exit(NULL);
 }
@@ -216,11 +215,9 @@ void* horno(void *data) {
         //llamo a la funcion imprimir le paso el struct y la accion de la funcion
         imprimirAccion(mydata,accion);
         //uso sleep para simular que que pasa tiempo
-        usleep( 3000000 );
-        //doy la señal a la siguiente accion (cortar me habilita mezclar)
-        //sem_wait(&mydata->semaforos_param.sem_horno);
+        usleep( 1000000 );
+
 		pthread_mutex_unlock(&mutex_horno);
-		
     	pthread_exit(NULL);
 }
 
@@ -229,6 +226,7 @@ void* armar_hamburguesa(void *data) {
 
         //creo el nombre de la accion de la funcion 
         char *accion = "armar_hamburguesa";
+        
         //creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
         struct parametro *mydata = data;
 
@@ -238,13 +236,19 @@ void* armar_hamburguesa(void *data) {
 
         //llamo a la funcion imprimir le paso el struct y la accion de la funcion
         imprimirAccion(mydata,accion);
+        
         //uso sleep para simular que que pasa tiempo
-        usleep( 3000000 );
-        //doy la señal a la siguiente accion (cortar me habilita mezclar)
-        //sem_post(&mydata->semaforos_param.sem_armar_hamburguesa);
+        usleep( 1000000 );
+
         sem_post(&mydata->semaforos_param.sem_horno);
 		sem_post(&mydata->semaforos_param.sem_cortar_extras);
 		sem_post(&mydata->semaforos_param.sem_plancha);
+
+         if(GANADOR==0){
+            //printf("\tEquipo %d \n " , mydata->equipo_param);
+            GANADOR = mydata->equipo_param;
+        }
+       
     pthread_exit(NULL);
 }
 
@@ -294,7 +298,7 @@ void* ejecutarReceta(void *i) {
 	pthread_data->semaforos_param.sem_horno = sem_horno;
 	pthread_data->semaforos_param.sem_armar_hamburguesa = sem_armar_hamburguesa;
 
-	//seteo las acciones y los ingredientes 	
+	//---------------seteo las acciones y los ingredientes 	------------------------------------
 
 	FILE *fp;
 	char* filename = "receta.txt";
@@ -340,7 +344,7 @@ void* ejecutarReceta(void *i) {
     fclose(fp);
 
 
-	//inicializo los semaforos
+	//--------------------------inicializo los semaforos-------------------------------------
 
 	sem_init(&(pthread_data->semaforos_param.sem_mezclar),0,0);
 	sem_init(&(pthread_data->semaforos_param.sem_salar),0,0);
@@ -459,20 +463,11 @@ int main (){
 	pthread_t equipo3;
 
 	//inicializo los hilos de los equipos
-    rc = pthread_create(&equipo1,                          //identificador unico
-                            NULL,                          //atributos del thread
-                                ejecutarReceta,             //funcion a ejecutar
-                                equipoNombre1);
+    rc = pthread_create(&equipo1,NULL,ejecutarReceta,equipoNombre1);
 
-    rc = pthread_create(&equipo2,                           //identificador unico
-                            NULL,                          //atributos del thread
-                                ejecutarReceta,             //funcion a ejecutar
-                                equipoNombre2);
+    rc = pthread_create(&equipo2,NULL,ejecutarReceta,equipoNombre2);
 
-    rc = pthread_create(&equipo3,                           //identificador unico
-                            NULL,                          //atributos del thread
-                                ejecutarReceta,             //funcion a ejecutar
-                                equipoNombre3);
+    rc = pthread_create(&equipo3,NULL,ejecutarReceta,equipoNombre3);
 
    if (rc){
        printf("Error:unable to create thread, %d \n", rc);
@@ -487,6 +482,13 @@ int main (){
 	pthread_mutex_destroy(&mutex_salar);
 	pthread_mutex_destroy(&mutex_plancha);
 	pthread_mutex_destroy(&mutex_horno);
+
+    
+            printf("//////////////////////////////////////////////////////\n");
+            printf("//                                                  //\n");
+            printf("//\t\tEquipo ganador es: %d                //\n" , GANADOR);
+            printf("//                                                  //\n");
+            printf("//////////////////////////////////////////////////////\n");
 
     pthread_exit(NULL);
 }
