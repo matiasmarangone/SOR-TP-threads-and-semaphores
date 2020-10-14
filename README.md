@@ -58,6 +58,9 @@ Otro desafío fue poder leer del archivo y separar la accion de los ingredientes
 
 <a name="ejecucion"/>
 
+#### Ambiente
+La confección de este trabajo se realizo con una máquina virtual en Widnows 10. Utilizando VirtualBox se monto un SO Linux Debian en el que pude crear los archivos, ejecutarlo, monitorear con HTOP, etc.
+
 ### Ejecución :man_technologist:	
 _El archivo debe ser compilado y ejecutado por consola, preferentemente en un ambiente Linux_
 ```
