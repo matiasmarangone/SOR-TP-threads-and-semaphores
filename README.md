@@ -71,4 +71,6 @@ La gran diferencia que pude apreciar es que los mutex "tienen dueño" en cambio 
 <a name="bibliografia"/>
 
 ### Bibliografía
-
+The Little Book of Semaphores. Libro de Allen B. Downey
+Slides de las clases
+Los 3 videos de ejercicios de semaforos en los que vimos pruebas de escritorio
