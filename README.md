@@ -9,6 +9,7 @@ Alumno: Matias Marangone
 * [Implementación](#implementacion)  
 * [Ejecución](#ejecucion)
 * [Conclusión](#conclusion)  
+* [Bibliografía](#bibliografia)  
   
 
 <a name="info"/>
@@ -40,6 +41,18 @@ _La entrega es un archivo con extensión ".C" que contiene la implementación y 
 * El archivo resultado.txt contiene una bitácora de las acciones realizadas por los equipos en el orden que fueron pasando para poder determinar qué equipo fue el ganador.
 * La ejecución de las funciones fue simulada utilizando la función usleep con el valor 1000000, es decir 1 segundo.
 
+#### Desafíos de implementación
+Una de las cosas en las que tuve que invertir mucho tiempo fue en coordinar todos los semáforos correctamente. Al ejecutar, notaba que el programa nunca terminaba, ya que en la consola no podia ejecutar nuevos comandos. Utilizando HTOP descubrí que aun tenia algunos threads corriendo:
+
+![semaforo3](/images/semaphore3.jpg)
+
+Volví a mi prueba de escritorio, realice algunas modificaciones en el workflow y luego lo plasmé en el código.
+
+Otro desafío fue poder leer del archivo y separar la accion de los ingredientes en una misma linea. Utilicé dos contadores, dos 'while' y un 'IF' para poder lograrlo:
+
+![semaforo4](/images/semaphore4.jpg)
+
+
 <a name="ejecucion"/>
 
 ### Ejecución :man_technologist:	
@@ -54,3 +67,8 @@ Ejecutar:   ./ejecutable
 Entre los conceptos aprendidos puedo destacar que usamos los mutex ya que son muy útiles para proteger data (sección crítica) de las condiciones de carrera, las cuales hay que evitar para lograr una correcta ejecución de los programas.
 Los semaforos se utilizan usualmente para sincronizar hilos más que proteger a la sección critica.
 La gran diferencia que pude apreciar es que los mutex "tienen dueño" en cambio los semaforos no. Con esto me refiero a que por ejemplo, una vez que se bloqueo un mutex, solo ese thread puede liberarlo y se asegura que nadie mas lo intente utilizar. Los semaforos por su parte pueden ser "prendidos" o "apagados" (post y wait respectivamente) por cualquier thread y en cualquier momento.
+
+<a name="bibliografia"/>
+
+### Bibliografía
+
