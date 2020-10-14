@@ -162,21 +162,23 @@ void* armar_medallones(void *data) {
 
 //funcion plancha
 void* plancha(void *data) {
-		pthread_mutex_lock(&mutex_plancha);
+		
         //creo el nombre de la accion de la funcion 
         char *accion = "plancha";
         //creo el puntero para pasarle la referencia de memoria (data) del struct pasado por parametro (la cual es un puntero). 
         struct parametro *mydata = data;
 
 		sem_wait(&mydata->semaforos_param.sem_plancha);
+        pthread_mutex_lock(&mutex_plancha);
 
         //llamo a la funcion imprimir le paso el struct y la accion de la funcion
         imprimirAccion(mydata,accion);
         //uso sleep para simular que que pasa tiempo
         usleep( 3000000 );
         //doy la señal a la siguiente accion (cortar me habilita mezclar)
-        sem_post(&mydata->semaforos_param.sem_plancha);
+        
 		pthread_mutex_unlock(&mutex_plancha);
+        sem_post(&mydata->semaforos_param.sem_plancha);
 		
    		pthread_exit(NULL);
 }
@@ -240,7 +242,9 @@ void* armar_hamburguesa(void *data) {
         usleep( 3000000 );
         //doy la señal a la siguiente accion (cortar me habilita mezclar)
         //sem_post(&mydata->semaforos_param.sem_armar_hamburguesa);
-
+        sem_post(&mydata->semaforos_param.sem_horno);
+		sem_post(&mydata->semaforos_param.sem_cortar_extras);
+		sem_post(&mydata->semaforos_param.sem_plancha);
     pthread_exit(NULL);
 }
 
@@ -374,7 +378,6 @@ void* ejecutarReceta(void *i) {
 
 	//join de todos los hilos
 	pthread_join (p1,NULL);
-	//crear join de demas hilos
 	pthread_join (p2,NULL);
 	pthread_join (p3,NULL);
 	pthread_join (p4,NULL);
