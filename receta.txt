@@ -1,0 +1,8 @@
+cortar|ajo|perejil|cebolla
+mezclar|ajo|perejil|cebolla|carne picada
+salar|ajo|perejil|cebolla|carne picada
+armar_medallones|mezcla para hamburguesas
+plancha|medallones
+cortar_extras|lechuga|tomate
+horno|pan
+armar_hamburguesa|medallones cocinados|pan horneado|extras, lechuga y tomate
