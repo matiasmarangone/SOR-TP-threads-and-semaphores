@@ -196,7 +196,7 @@ void* cortar_extras(void *data) {
         //uso sleep para simular que que pasa tiempo
         usleep( 3000000 );
         //doy la señal a la siguiente accion (cortar me habilita mezclar)
-        sem_wait(&mydata->semaforos_param.sem_cortar_extras);
+        //sem_wait(&mydata->semaforos_param.sem_cortar_extras);
 
     pthread_exit(NULL);
 }
@@ -216,7 +216,7 @@ void* horno(void *data) {
         //uso sleep para simular que que pasa tiempo
         usleep( 3000000 );
         //doy la señal a la siguiente accion (cortar me habilita mezclar)
-        sem_wait(&mydata->semaforos_param.sem_horno);
+        //sem_wait(&mydata->semaforos_param.sem_horno);
 		pthread_mutex_unlock(&mutex_horno);
 		
     	pthread_exit(NULL);
