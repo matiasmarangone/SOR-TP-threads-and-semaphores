@@ -23,12 +23,10 @@ cocinar los medallones ya que solo tienen una plancha para todos los equipos y e
 ### Prueba de escritorio
 A continuación se muestra la prueba de escritorio final con la que me base para realizar la implementación:
 
-![GitHub Logo](/images/semaphorestp.png)
-Format: ![Alt Text](/images/semaphorestp.png)
+![semaforo1](/images/semaphorestp.png)
 
 Y el estado de los semaforos para la prueba de escritorio:
-![GitHub Logo](/images/semaphorestp2.png)
-Format: ![Alt Text](/images/semaphorestp2.png)
+![semaforo2](/images/semaphorestp2.png)
 
 <a name="implementacion"/>
 
