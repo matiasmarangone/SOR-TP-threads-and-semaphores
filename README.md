@@ -21,9 +21,14 @@ cocinar los medallones ya que solo tienen una plancha para todos los equipos y e
 <a name="prueba"/>
 
 ### Prueba de escritorio
-A continuación se muestra la prueba de escritorio final con la que me base para realizar la implementación
+A continuación se muestra la prueba de escritorio final con la que me base para realizar la implementación:
+
 ![GitHub Logo](/images/semaphorestp.png)
 Format: ![Alt Text](/images/semaphorestp.png)
+
+Y el estado de los semaforos para la prueba de escritorio:
+![GitHub Logo](/images/semaphorestp2.png)
+Format: ![Alt Text](/images/semaphorestp2.png)
 
 <a name="implementacion"/>
 
@@ -41,3 +46,6 @@ Ejecutar:   ./ejecutable
 <a name="conclusion"/>
 
 ### Conclusión
+Entre los conceptos aprendidos puedo destacar que usamos los mutex ya que son muy útiles para proteger data (sección crítica) de las condiciones de carrera, las cuales hay que evitar para lograr una correcta ejecución de los programas.
+Los semaforos se utilizan usualmente para sincronizar hilos más que proteger a la sección critica.
+La gran diferencia que pude apreciar es que los mutex "tienen dueño" en cambio los semaforos no. Con esto me refiero a que por ejemplo, una vez que se bloqueo un mutex, solo ese thread puede liberarlo y se asegura que nadie mas lo intente utilizar. Los semaforos por su parte pueden ser "prendidos" o "apagados" (post y wait respectivamente) por cualquier thread y en cualquier momento.
